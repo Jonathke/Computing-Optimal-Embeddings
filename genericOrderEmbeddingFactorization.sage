@@ -29,7 +29,6 @@ def GenericOrderEmbeddingFactorization(O, t, n, heuristic=False):
     _.<s> = Integers(delta)[]
     t1s = [ZZ(r) for r, e in (4*(s*s - s*t_beta*t) - (D_beta*D - (t_beta*t)^2)).roots()]
 
-    t1s.sort()
     #Finding gamma and the index
     basis_00 = O_doubleZero(O, B(1), beta)  
     gamma = basis_00[0]
@@ -47,30 +46,35 @@ def GenericOrderEmbeddingFactorization(O, t, n, heuristic=False):
 
     bound = ceil(8*sqrt(n*beta.reduced_norm()))
     k = 0
-    while t1s[-1] + k*delta < bound:
+    while not all([(t + k*delta) > bound for t in t1s]):
         for t1 in t1s:
+
             sol = Z_beta.solve_right(vector(QQ, [M*t, M*(t1 + k*delta)]))
             x, y = sol
-
-            alpha_0 = x + beta*y
 
             rhs = M**2*n - f(x,y)
             assert rhs % gamma.reduced_norm() == 0
 
-
             if heuristic:
-                z, w, solved = Cornacchia(f, ZZ(rhs//gamma.reduced_norm()))
-                if solved:
-                    print("M*alpha embedded!")
+                m = ZZ(rhs/(gamma.reduced_norm()*M)) #Also divide by M
+                m_prime = prod([l**e for l, e in factor(m, limit=100) if l < 100])
+                if not is_pseudoprime(m/(m_prime)): #check that we can factor efficiently
+                    continue
+                print("Found a good Cornacchia instance!")
+                sols = all_cornacchia(d, m*M)
+                print("Cornacchia Done!")
+                for z, w in sols:
                     alpha = x + y*beta + gamma*(z + w*beta)
                     assert alpha.reduced_norm() == M**2*n
                     assert alpha.reduced_trace() == M*t
-                
+                    
                     if alpha/M in O:
                         print("Solution found!!")
-                        return alpha/M
+                        return alpha/M  
+                print("No solution :c")
             else:
-                sols = all_cornacchia(d, ZZ(rhs//gamma.reduced_norm()))
+                print(f"factoring: {ZZ(rhs//gamma.reduced_norm())}")
+                sols = all_cornacchia(d, ZZ(rhs/gamma.reduced_norm()))
                 for z, w in sols:
                     alpha = x + y*beta + gamma*(z + w*beta)
                     assert alpha.reduced_norm() == M**2*n

@@ -27,6 +27,7 @@ def test_genericOrderEmbedding():
     t = ZZ(omega.reduced_trace())
     n = ZZ(omega.reduced_norm())
 
+    print(f"log(p): {RR(log(p, 2))}")
     print(f"n norm: {RR(log(n, p))}")
 
     tstart = time.time()
@@ -61,6 +62,7 @@ def test_genericOrderEmbeddingFactorisation():
     t = ZZ(omega.reduced_trace())
     n = ZZ(omega.reduced_norm())
 
+    print(f"log(p): {RR(log(p, 2))}")
     print(f"n norm: {RR(log(n, p))}")
 
     tstart = time.time()
@@ -73,20 +75,47 @@ def test_genericOrderEmbeddingFactorisation():
 
     print("     > Success")
 
+    print("\n\n> Testing GenericOrderEmbeddingFactorization with a generic order, where p is small (takes O(p^(1/3)))")
+    p = next_prime(2**20) #O(p^(1/3)), takes some time
+    B = QuaternionAlgebra(-1, -p)
+    i, j, k = B.gens()
+    O0 = B.quaternion_order([1, i, (i+j)/2, (1+k)/2])
+
+    steps = 50
+    omega = 2**steps*i
+
+    I = heuristicRandomIdeal(O0, 2**steps)
+    O0 = I.right_order()
+
+    t = ZZ(0)
+    n = ZZ.random_element(p**10, p**11)
+    while kronecker(n, p) != 1:
+        n = ZZ.random_element(p**10, p**11)
+
+    print(f"log(p): {RR(log(p, 2))}")
+    print(f"log(n,p): {RR(log(n, p))}")
+
+    tstart = time.time()
+    alpha = GenericOrderEmbeddingFactorization(O0, t, n, heuristic=True)
+    print(f"Took {time.time() - tstart}")
+    print(alpha)
+    assert alpha in O0
+    assert alpha.reduced_trace() == t
+    assert alpha.reduced_norm() == n
+
+    print("     > Success")
+
     print("\n\n> Testing GenericOrderEmbeddingFactorization with a special order")
     p = next_prime(2**150) #always be fast in this order
     B = QuaternionAlgebra(-1, -p)
     i, j, k = B.gens()
     O0 = B.quaternion_order([1, i, (i+j)/2, (1+k)/2]) #always be fast in this order
 
-    I = heuristicRandomIdeal(O0, 2**5) # A few steps away, it still contains a small element
-    O0 = I.right_order()
-
     t = ZZ(0)
-    n = ZZ.random_element(p**5, p**6)
+    n = ZZ.random_element(p**3, p**4)
     while kronecker(n, p) != 1:
         n = ZZ.random_element(p**5, p**6)
-
+    print(f"log(p): {RR(log(p, 2))}")
     print(f"log(n,p): {RR(log(n, p))}")
 
     tstart = time.time()
@@ -108,6 +137,7 @@ def test_connectingIdeal():
     i, j, k = B.gens()
     O1728 = B.quaternion_order([1, i, (i+j)/2, (1+k)/2])
 
+    print(f"log(p): {RR(log(p, 2))}")
     I = OptimalPath(2, O1728)
 
     print(f"Ideal found, of norm {factor(I.norm())}")
@@ -117,4 +147,4 @@ def test_connectingIdeal():
 if __name__ == "__main__":
     test_connectingIdeal()
     test_genericOrderEmbedding()
-    #test_genericOrderEmbeddingFactorisation() <- currently bugging in the generic case
+    test_genericOrderEmbeddingFactorisation()# <- currently bugging in the generic case

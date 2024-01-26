@@ -105,7 +105,6 @@ def ReducedBasis(I):
     reduced_basis_elements = _matrix_to_gens(U, B)
     return reduced_basis_elements
 
-
 def reduced_basis(gens, O):   
     """
     More generally reduces the basis of any (not necessarily full rank) lattice
