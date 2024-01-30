@@ -1,4 +1,6 @@
 import itertools
+from sage.all import *
+from random import randint
 
 def IdealGenerator(I):
     p = I.quaternion_algebra().ramified_primes()[0]
@@ -111,18 +113,26 @@ def reduced_basis(gens, O):
     """
     Quat = O.quaternion_algebra()
     M = matrix(list(g) for g in gens)
-    big = 10^99
+    big = Integer(10)**99
     scal = diagonal_matrix(ZZ, [ceil(sqrt(g.reduced_norm())*big) for g in Quat.basis()])
     M = (M * scal).LLL() * ~scal
     return [sum(c*g for c,g in zip(v, Quat.basis())) for v in M]
 
 def _roots_mod_prime_pow(d, l, e):
-    if kronecker(d, l) == -1:
+    """ This is extremely slow with sage, so do it custom """
+    if not is_square(Integers(l**e)(d)):
         return []
-    rts = Integers(l)(d).sqrt(all=True)
+    if d % l**e == 0:
+        return [ZZ(r) for r in Integers(l**e)(0).sqrt(all=True)]
+
+    k_start = 1
+    while d % l**k_start == 0:
+        k_start += 1
+    assert k_start <= e, "Replace this hacky code with sage 10.3 upgrade"
+    rts = Integers(l**k_start)(d).sqrt(all=True)
     rts = [ZZ(r) for r in rts]
     if l < 1000:
-        for k in range(2,e+1):
+        for k in range(k_start+1,e+1):
             lift_rts = []
             for r in rts:
                 Z_le = Integers(l**k)
@@ -152,8 +162,10 @@ def all_roots_mod(d, M):
     all_rts = []
     mods = []
     for l, e in fac_M:
-        _.<X> = Integers(l**e)[]
+        #_, X = PolynomialRing(Integers(l**e), "X").objgen()
         rts = _roots_mod_prime_pow(d, l, e)
+        #print(f"for l, e: {l, e}")
+        #print(f"     > {sorted((X**2 - d).roots(multiplicities=False)) == sorted(rts)}")
         if len(rts) == 0:
             return []
         all_rts.append(rts)
@@ -180,20 +192,16 @@ def all_cornacchia(d, m):
         if g in usedgs:
             continue
         usedgs.append(g)
-        tempm = ZZ(m/(g^2))
-        _.<X> = Integers(tempm)[]
-        #rs = [ZZ(r) for r in (X^2 + d).roots(multiplicities=False)] #This sometimes get stuck...
-        #print("Sage built in:")
-        #print(rs)
+        tempm = ZZ(m/(g**2))
+        #_, X = PolynomialRing(Integers(tempm), "X").objgen()
         rs = all_roots_mod(-ZZ(d), tempm)
-        #print("This shit")
-        #print(rs)
-        bound = round(tempm^(1/2),5)
+        #print(sorted((X**2 + d).roots(multiplicities=False)) == sorted(rs))
+        bound = round(tempm**(1/2),5)
         for r in rs:
             n = tempm
             while r > bound:
                 n, r = r, n%r
-            s = sqrt((tempm - r^2)/d)
+            s = sqrt((tempm - r**2)/d)
             if s in ZZ:
                 sols.append((g*r, g*s))
                 sols.append((g*r, -g*s))
@@ -212,7 +220,7 @@ def orderIsomorphism(O, alpha):
 
 def trace_0(I):
     beta0, beta1, beta2, beta3 = ReducedBasis(I)
-    T0 = (QQ^4).submodule((QQ^4).basis()[1:])
+    T0 = (QQ**4).submodule((QQ**4).basis()[1:])
     M = I.free_module().intersection(T0).basis_matrix()
     return reduced_basis([sum(c*g for c,g in zip(v, I.quaternion_algebra().basis())) for v in M], I)
 

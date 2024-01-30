@@ -1,3 +1,7 @@
+from helpers import ReducedBasis
+from sage.all import *
+from itertools import product
+
 def GenericOrderEmbedding(O, t, n):
     B = O.quaternion_algebra()
     i, j, k = B.gens()
@@ -9,8 +13,8 @@ def GenericOrderEmbedding(O, t, n):
     trace_betas = [ZZ(beta.reduced_trace()) for beta in [beta1, beta2, beta3]]
 
     D = t**2 - 4*n
-    _.<s> = GF(p)[]
-    ts = [[ZZ(r) for r, e in (4*(s*s - s*ti*t) - (Di*D - (ti*t)^2)).roots()] for ti, Di in zip(trace_betas, Ds)]
+    _, s = PolynomialRing(GF(p), "s").objgen()
+    ts = [[ZZ(r) for r, e in (4*(s*s - s*ti*t) - (Di*D - (ti*t)**2)).roots()] for ti, Di in zip(trace_betas, Ds)]
     new_ts = []
     for t1, t2 in ts:
         if t1 > t2:
@@ -29,7 +33,7 @@ def GenericOrderEmbedding(O, t, n):
 
     M = Matrix(QQ, system_eqs)
 
-    for t1,t2,t3 in itertools.product(*new_ts):
+    for t1,t2,t3 in product(*new_ts):
 
         sol = M.solve_right(vector(QQ, [t, t1, t2, t3])) 
         alpha = sum([c*basis_elem for c, basis_elem in zip(sol, [1, beta1, beta2, beta3])])
