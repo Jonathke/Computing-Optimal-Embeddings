@@ -36,7 +36,6 @@ def _GenericOrderEmbeddingFactorizationInternal(O, t, n, heuristic=False, ans=No
     gamma = basis_00[0]
     Z_beta_gamma = B.quaternion_order([B(1), beta, gamma, gamma*beta])
     M = Z_beta_gamma.discriminant()/delta
-    print(f"M = {factor(M)}")
 
     # Solving for x and y
     system_eqs = []

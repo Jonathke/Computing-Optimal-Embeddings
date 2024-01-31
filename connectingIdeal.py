@@ -1,6 +1,6 @@
 import itertools
 from sage.all import *
-from helpers import ReducedBasis, QuaternionOrderBasis, isIsomorphic
+from helpers import ReducedBasis, QuaternionOrderBasis, isIsomorphic, IsomorphismGamma, EvalIsomorphism
 from genericOrderEmbeddingFactorization import *
 
 def allQuadraticIdeals(D, O, gen):
@@ -39,8 +39,6 @@ def ConnectingIdealWithNorm(d, O1, O2):
     find a left O1-ideal of norm d with right order isomorphic to O2
     """
     _, gamma_1, _, _ = ReducedBasis(O2)
-    print(gamma_1.reduced_trace())
-    print(GenericOrderEmbeddingFactorization(O1, ZZ((d*gamma_1).reduced_trace()), ZZ((d*gamma_1).reduced_norm())))
     for omega in GenericOrderEmbeddingFactorizationAll(O1, ZZ((d*gamma_1).reduced_trace()), ZZ((d*gamma_1).reduced_norm())):
         d_m = gcd(QuaternionOrderBasis(omega, O1))
         d_mm = gcd(d_m, d) #Take care! Possible to go "above" the right level too!
@@ -55,37 +53,37 @@ def ConnectingIdealWithNorm(d, O1, O2):
 
 def OptimalPath(ell, O1):
     #Looks for an optimal path in the ell-isogeny graph
-    #from O1 to O corresponding to j-invariant 0
+    #from O1 to O, where O is the endomorphism ring of j-invariant 0
 
     B = O1.quaternion_algebra()
     i, j, k = B.gens()
     p = -ZZ(j**2)
     assert p % 12 == 11
 
+    # Need to find O in the right quaternion algebra
+    Bm = QuaternionAlgebra(-3, -p)
+    ii, jj, kk = Bm.gens()
+    O = Bm.quaternion_order([Bm(1), (1+ii)/2, (jj+kk)/2, (ii + kk)/3])
+    gamma, _ = IsomorphismGamma(Bm, B)
+    O = B.quaternion_order([EvalIsomorphism(b, B, gamma) for b in O.basis()])
+
     top = ceil(log(p, 2))+3
     bot = 1
 
     #Binary search for the minimum number of steps
-    # (1 + sqrt(-3)) / 2
     while top > bot:
         mid = (top + bot)//2
         steps = mid
-        t = ell**(steps)
-        n = ell**(steps*2)
-        print(f"n norm: {RR(log(n, p))}")
+        print(f"testing: {ell}^{steps}")
         alpha = None
-        alpha = GenericOrderEmbeddingFactorization(O1, t, n)
-        if not alpha:
+        I = ConnectingIdealWithNorm(ell**steps, O1, O)
+        if not I:
             bot = mid + 1
         else:
-            omega = alpha
-            shortest = steps
+            I_shortest = I
             top = mid
 
-    print(omega)
-
-    assert omega in O1
-    I = O1*omega + O1*(ell**shortest)
-    assert omega/(ell**shortest) in I.right_order()
+    assert I_shortest.left_order() == O1
+    assert isIsomorphic(I_shortest.right_order(), O)
     return I
 
