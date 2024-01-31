@@ -18,13 +18,16 @@ def GenericOrderEmbedding(O, t, n):
     new_ts = []
     for t1, t2 in ts:
         if t1 > t2:
-            new_ts.append([t1-p, t2])
+            new_ts.append([t2-p, t1-p, t1, t2])
         else:
-            new_ts.append([t1, t2-p])
-    bounds = [ceil(sqrt(8*n*betai.reduced_norm())) for betai in [beta1, beta2, beta3]]
+            new_ts.append([t1-p, t2-p, t1, t2])
+    bounds = [ceil(4*sqrt(n*betai.reduced_norm())) for betai in [beta1, beta2, beta3]]
     for i, tlist in enumerate(new_ts):
         while tlist[-2] + p < bounds[i]:
             tlist.append(tlist[-2] + p)
+        tlist = [t for t in tlist if abs(t) < bounds[i]]
+        tlist += [-t for t in tlist]
+        tlist = list(set(tlist))
 
     system_eqs = []
     for beta in [B(1), beta1, beta2, beta3]:
