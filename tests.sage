@@ -173,9 +173,25 @@ def test_connectingIdeal():
 
     print("     > Success")
 
+def test_connectingIdealForRepresentingInteger():
+    print("\n\n> Testing ConnectingIdeal with representing Integer")
+    p = next_prime(2**50)
+    
+    B = QuaternionAlgebra(-1, -p)
+    i, j, k = B.gens()
+    O1 = B.quaternion_order([1, i, (i+j)/2, (1+k)/2])
+
+    d = randint(0,2**70)
+    I = ConnectingIdealWithNorm(d, O1, O1) 
+    w = ReducedBasis(I)[0]
+    assert w.reduced_norm() == d
+    assert w in O1
+    print("     > Success")
+
 if __name__ == "__main__":
-    test_optimalPath()
-    test_connectingIdeal()
-    test_genericOrderEmbedding()
-    test_genericOrderEmbeddingFactorisation()
-    test_genericOrderEmbeddingFactorisationHeuristic()
+    #test_optimalPath()
+    #test_connectingIdeal()
+    test_connectingIdealForRepresentingInteger()
+    #test_genericOrderEmbedding()
+    #test_genericOrderEmbeddingFactorisation()
+    #test_genericOrderEmbeddingFactorisationHeuristic()

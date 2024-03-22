@@ -64,6 +64,19 @@ def _GenericOrderEmbeddingFactorizationInternal(O, t, n, heuristic=False, ans=No
             rhs = M**2*n - f(x,y)
             assert rhs % gamma.reduced_norm() == 0
 
+            if rhs < 0:
+                continue
+
+            if rhs == 0:
+                alpha = x + y*beta
+                if alpha in ZZ:
+                    assert beta.reduced_norm() == 1
+                    alpha = beta*alpha
+                if alpha/M in O:
+                    print("Solution found!!")
+                    yield alpha/M
+                continue
+
             if heuristic:
                 m = ZZ(rhs/(gamma.reduced_norm()*M)) #Also divide by M
                 m_prime = prod([l**e for l, e in factor(m, limit=100) if l < 100])
