@@ -189,9 +189,9 @@ def test_connectingIdealForRepresentingInteger():
     print("     > Success")
 
 if __name__ == "__main__":
-    #test_optimalPath()
-    #test_connectingIdeal()
+    test_optimalPath()
+    test_connectingIdeal()
     test_connectingIdealForRepresentingInteger()
-    #test_genericOrderEmbedding()
-    #test_genericOrderEmbeddingFactorisation()
-    #test_genericOrderEmbeddingFactorisationHeuristic()
+    test_genericOrderEmbedding()
+    test_genericOrderEmbeddingFactorisation()
+    test_genericOrderEmbeddingFactorisationHeuristic()
